@@ -5,27 +5,27 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Data
 @Entity
-@Table(name = "posts")
-public class Post {
+@Data
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long authorId;
+    private Long postId;
 
+    private Long authorId;
     private String authorType;
 
     private String content;
 
+    private int depthLevel;
+
     private LocalDateTime createdAt;
 
-    private int likes=0;
-
     @PrePersist
-    public void prePersist() {
-        this.createdAt=LocalDateTime.now();
+    public void setCreatedAt() {
+        this.createdAt = LocalDateTime.now();
     }
 }
