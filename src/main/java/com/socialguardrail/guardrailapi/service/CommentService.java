@@ -19,6 +19,9 @@ public class CommentService {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private NotificationService notification;
+
     public void viralityScore(Long postId, int points) {
         String key = "post:" + postId + ":virality_score";
 
@@ -40,11 +43,7 @@ public class CommentService {
         );
     }
 
-    public boolean canBotReply(Long postId){
-        String key="post:"+postId+":bot_reply_count";
-        Long count = redisTemplate.opsForValue().increment(key, 0);
-        return count < 100;
-    }
+
 
 
 
@@ -54,6 +53,8 @@ public class CommentService {
     public Comment addComment(Long postId, Comment comment) {
 
         comment.setPostId(postId);
+
+
         if (comment.getDepthLevel() > 20) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -78,19 +79,19 @@ public class CommentService {
                 );
             }
 
-            if (!canBotReply(postId)) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Bot limit reached"
-                );
-            }
-
             String key = "post:" + postId + ":bot_reply_count";
-            redisTemplate.opsForValue().increment(key);
+            Long count=redisTemplate.opsForValue().increment(key);
+
+            if(count > 100){
+                redisTemplate.opsForValue().decrement(key);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Bot limit reached");
+            }
 
             setCooldown(botId, userId);
 
             viralityScore(postId, 1);
+
+            notification.handleNotification(userId,"Bot"+botId+"replied to your post");
 
         } else {
             viralityScore(postId, 50);
