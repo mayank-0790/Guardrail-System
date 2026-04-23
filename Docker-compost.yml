@@ -1,0 +1,90 @@
+##  Docker Setup (PostgreSQL + Redis)
+
+services:
+
+  postgres-db:
+    image: postgres:15
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+
+
+---
+
+##  How to Run
+
+```bash
+docker-compose up -d
+```
+
+---
+
+##  Verify Services
+
+### PostgreSQL
+
+```bash
+docker exec -it postgres-db psql -U postgres -d mydb
+```
+
+---
+
+### Redis
+
+```bash
+docker exec -it redis redis-cli
+```
+
+---
+
+##  Spring Boot Configuration
+
+  # PostgreSQL
+  spring.datasource.url=jdbc:postgresql://localhost:5432/mydb
+  spring.datasource.username=postgres
+  spring.datasource.password=postgres
+  
+  # Redis
+  spring.redis.host=localhost
+  spring.redis.port=6379
+  ```
+
+---
+
+## Notes
+
+* PostgreSQL runs on port **5432**
+* Redis runs on port **6379**
+* Data is persisted using Docker volume (`postgres_data`)
+* No in-memory state → system remains stateless ✔
+
+---
+
+##  Reset Commands
+
+### Clear Redis
+
+```bash
+redis-cli flushall
+```
+  
+  ### Clear Database
+
+```sql
+DELETE FROM comment;
+```
